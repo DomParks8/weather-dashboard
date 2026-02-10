@@ -1,0 +1,93 @@
+* {
+  box-sizing: border-box;
+  font-family: Arial, sans-serif;
+}
+
+body {
+  margin: 0;
+  background: #eef2f7;
+  display: flex;
+  justify-content: center;
+  padding: 2rem;
+}
+
+.app {
+  background: white;
+  padding: 2rem;
+  border-radius: 8px;
+  max-width: 500px;
+  width: 100%;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+h1 {
+  text-align: center;
+}
+
+.search {
+  display: flex;
+  gap: 0.5rem;
+}
+
+input {
+  flex: 1;
+  padding: 0.5rem;
+}
+
+button {
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+}
+
+#status {
+  text-align: center;
+  margin-top: 1rem;
+  color: #555;
+}
+
+.hidden {
+  display: none;
+}
+
+.current {
+  margin-top: 1rem;
+}
+
+.forecast {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+
+.forecast-day {
+  background: #f4f6f9;
+  padding: 0.5rem;
+  border-radius: 6px;
+  text-align: center;
+}
+
+/* Weather backgrounds */
+body.clear {
+  background: linear-gradient(to bottom, #4facfe, #00f2fe);
+}
+
+body.cloudy {
+  background: linear-gradient(to bottom, #bdc3c7, #2c3e50);
+}
+
+body.rain {
+  background: linear-gradient(to bottom, #667db6, #485563);
+}
+
+body.snow {
+  background: linear-gradient(to bottom, #e6e9f0, #eef1f5);
+}
+
+body.fog {
+  background: linear-gradient(to bottom, #d7d2cc, #304352);
+}
+
+body.storm {
+  background: linear-gradient(to bottom, #232526, #414345);
+}
