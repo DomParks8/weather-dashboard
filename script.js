@@ -1,5 +1,6 @@
 const searchBtn = document.getElementById("searchBtn");
-const cityInput = document.getElementById("cityInput");
+// const cityInput = document.getElementById("cityInput");
+const locationInput = document.getElementById("locationInput");
 const statusEl = document.getElementById("status");
 const weatherEl = document.getElementById("weather");
 
@@ -8,14 +9,55 @@ const tempEl = document.getElementById("temp");
 const windEl = document.getElementById("wind");
 const forecastEl = document.getElementById("forecast");
 
-searchBtn.addEventListener("click", () => {
+/*searchBtn.addEventListener("click", () => {
   const city = cityInput.value.trim();
   if (!city) {
     statusEl.textContent = "Please enter a city.";
     return;
   }
   fetchWeather(city);
+});*/
+
+searchBtn.addEventListener("click", () => {
+  const input = locationInput.value.trim();
+
+  if (!input) {
+    statusEl.textContent = "Please enter a city or ZIP code.";
+    return;
+  }
+
+  if (/^\d{5}$/.test(input)) {
+    fetchWeatherByZip(input);
+  } else {
+    fetchWeatherByCity(input);
+  }
 });
+
+function fetchWeatherByCity(city) {
+  fetchWeather(city); // reuse your existing function
+}
+
+function fetchWeatherByZip(zip) {
+  // Convert ZIP -> location name using Open-Meteo geocoding,
+  // then reuse fetchWeather() by passing the returned name
+  fetch(
+    `https://geocoding-api.open-meteo.com/v1/search?name=${zip}&count=1&country=US`
+  )
+    .then((res) => res.json())
+    .then((geoData) => {
+      if (!geoData.results || geoData.results.length === 0) {
+        statusEl.textContent = "ZIP code not found.";
+        return;
+      }
+
+      const name = geoData.results[0].name;
+      fetchWeather(name); // reuse your existing function
+    })
+    .catch((err) => {
+      statusEl.textContent = "Error looking up ZIP code.";
+      console.error(err);
+    });
+}
 
 async function fetchWeather(city) {
   try {
@@ -46,6 +88,11 @@ async function fetchWeather(city) {
     tempEl.textContent = weatherData.current_weather.temperature;
     windEl.textContent = weatherData.current_weather.windspeed;
 
+    //Weather-based background
+    const weatherCode = weatherData.current_weather.weatherCode;
+    console.log("Weather code:", weatherCode);
+    setBackground(weatherCode);
+
     // Forecast
     forecastEl.innerHTML = "";
     weatherData.daily.time.forEach((day, index) => {
@@ -66,5 +113,23 @@ ${weatherData.daily.temperature_2m_min[index]}°</p>
   } catch (error) {
     statusEl.textContent = "Something went wrong. Please try again.";
     console.error(error);
+  }
+}
+
+function setBackground(code) {
+  document.body.className = "";
+
+  if (code === 0) {
+    document.body.classList.add("clear");
+  } else if (code >= 1 && code <= 3) {
+    document.body.classList.add("cloudy");
+  } else if (code === 45 || code === 48) {
+    document.body.classList.add("fog");
+  } else if (code >= 51 && code <= 67) {
+    document.body.classList.add("rain");
+  } else if (code >= 71 && code <= 77) {
+    document.body.classList.add("snow");
+  } else if (code >= 95) {
+    document.body.classList.add("storm");
   }
 }
