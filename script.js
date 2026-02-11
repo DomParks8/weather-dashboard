@@ -59,6 +59,76 @@ function fetchWeatherByZip(zip) {
     });
 }
 
+async function fetchWeatherByZip(zip) {
+  try {
+    statusEl.textContent = "Loading...";
+    weatherEl.classList.add("hidden");
+
+    // 1) ZIP -> lat/lon using Zippopotam.us (accurate for US ZIP codes)
+    const zipRes = await fetch(`https://api.zippopotam.us/us/${zip}`);
+
+    if (!zipRes.ok) {
+      statusEl.textContent = "ZIP code not found.";
+      return;
+    }
+
+    const zipData = await zipRes.json();
+
+    const place = zipData.places?.[0];
+    if (!place) {
+      statusEl.textContent = "ZIP code not found.";
+      return;
+    }
+
+    const latitude = Number(place.latitude);
+    const longitude = Number(place.longitude);
+    const locationLabel = `${place["place name"]}, ${place["state abbreviation"]}`;
+
+    // 2) Now fetch Open-Meteo weather using coordinates
+    await fetchWeatherByCoords(latitude, longitude, locationLabel);
+  } catch (err) {
+    statusEl.textContent = "Error looking up ZIP code.";
+    console.error(err);
+  }
+}
+
+async function fetchWeatherByCoords(latitude, longitude, name) {
+  try {
+    const weatherRes = await fetch(
+      `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&daily=temperature_2m_max,temperature_2m_min&current_weather=true&temperature_unit=fahrenheit&windspeed_unit=mph&timezone=auto`
+    );
+    const weatherData = await weatherRes.json();
+
+    cityNameEl.textContent = name;
+    tempEl.textContent = weatherData.current_weather.temperature;
+    windEl.textContent = weatherData.current_weather.windspeed;
+
+    // NOTE: open-meteo uses "weathercode" (lowercase)
+    const weatherCode = weatherData.current_weather.weathercode;
+    setBackground(weatherCode);
+
+    forecastEl.innerHTML = "";
+    weatherData.daily.time.forEach((day, index) => {
+      const div = document.createElement("div");
+      div.className = "forecast-day";
+      div.innerHTML = `
+    <strong>${new Date(day).toLocaleDateString("en-US", {
+      weekday: "short",
+    })}</strong>
+    <p>${weatherData.daily.temperature_2m_max[index]}° /
+    ${weatherData.daily.temperature_2m_min[index]}°</p>
+    `;
+      forecastEl.appendChild(div);
+    });
+
+    statusEl.textContent = "";
+    weatherEl.classList.remove("hidden");
+  } catch (err) {
+    statusEl.textContent = "Something went wrong. Please try again.";
+    console.error(err);
+  }
+}
+
 async function fetchWeather(city) {
   try {
     statusEl.textContent = "Loading...";
@@ -89,7 +159,7 @@ async function fetchWeather(city) {
     windEl.textContent = weatherData.current_weather.windspeed;
 
     //Weather-based background
-    const weatherCode = weatherData.current_weather.weatherCode;
+    const weatherCode = weatherData.current_weather.weathercode;
     console.log("Weather code:", weatherCode);
     setBackground(weatherCode);
 
@@ -117,7 +187,9 @@ ${weatherData.daily.temperature_2m_min[index]}°</p>
 }
 
 function setBackground(code) {
-  document.body.className = "";
+  //document.body.className = "";
+  const classes = ["clear", "cloudy", "fog", "rain", "snow", "storm"];
+  document.body.classList.remove(...classes);
 
   if (code === 0) {
     document.body.classList.add("clear");
