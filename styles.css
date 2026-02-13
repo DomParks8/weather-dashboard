@@ -713,3 +713,18 @@ body.storm {
     font-size: 1rem;
   }
 }
+
+/* --- Night overrides for clear weather --- */
+body.night.clear {
+  background: linear-gradient(to bottom, #0b1026, #111827);
+}
+
+/* Hide the big sunny sun at night */
+body.night .fx.clear .sun {
+  opacity: 0 !important;
+}
+
+/* Optional: make the FX overlays less bright at night */
+body.night .fx.clear {
+  opacity: 0.35;
+}
