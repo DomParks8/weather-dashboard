@@ -11,6 +11,7 @@ body {
   padding: 2rem;
 }
 
+/* App container */
 .app {
   background: white;
   padding: 2rem;
@@ -18,6 +19,10 @@ body {
   max-width: 500px;
   width: 100%;
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+
+  /* keep app above the FX */
+  position: relative;
+  z-index: 1;
 }
 
 h1 {
@@ -27,16 +32,33 @@ h1 {
 .search {
   display: flex;
   gap: 0.5rem;
+  margin-top: 0.75rem;
 }
 
 input {
   flex: 1;
-  padding: 0.5rem;
+  padding: 0.6rem 0.75rem;
+  border-radius: 8px;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  outline: none;
 }
 
 button {
-  padding: 0.5rem 1rem;
+  padding: 0.6rem 1rem;
   cursor: pointer;
+  border-radius: 8px;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  background: #fff;
+}
+
+button:hover {
+  background: rgba(0, 0, 0, 0.04);
+}
+
+button:focus-visible,
+input:focus-visible {
+  outline: 3px solid rgba(79, 172, 254, 0.35);
+  outline-offset: 2px;
 }
 
 #status {
@@ -98,12 +120,6 @@ body.storm {
   inset: 0;
   pointer-events: none;
   z-index: 0;
-}
-
-/* keep app above the FX */
-.app {
-  position: relative;
-  z-index: 1;
 }
 
 /* ---------- CLEAR (sun pulse) ---------- */
@@ -251,26 +267,60 @@ body.storm {
   }
 }
 
-.day-night {
-  margin: 0.75rem auto 0;
-  width: fit-content;
-  padding: 0.25rem 0.6rem;
-  border-radius: 999px;
-  font-size: 0.85rem;
-  font-weight: 600;
-  letter-spacing: 0.2px;
-  border: 1px solid rgba(0, 0, 0, 0.08);
+/* ---------- Tabs (Navigation) ---------- */
+.tabs {
+  display: flex;
+  gap: 0.5rem;
+  margin: 1rem 0 0.5rem;
+}
+
+.tab {
+  flex: 1;
+  padding: 0.6rem 0.8rem;
+  border: 1px solid rgba(0, 0, 0, 0.1);
   background: rgba(255, 255, 255, 0.7);
-  backdrop-filter: blur(4px);
+  border-radius: 999px;
+  font-weight: 700;
+  cursor: pointer;
 }
 
-/* Optional: tint */
-body.night .app {
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
+.tab.active {
+  background: rgba(0, 0, 0, 0.08);
 }
 
-/* ---------- Day/Night Chip (prettier) ---------- */
+/* ---------- Air Quality cards ---------- */
+.aq-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
+  margin-top: 0.75rem;
+}
+
+.aq-card {
+  background: #f4f6f9;
+  padding: 0.75rem;
+  border-radius: 10px;
+  text-align: center;
+}
+
+.aq-card div {
+  font-size: 1.4rem;
+  font-weight: 800;
+  margin-top: 0.25rem;
+}
+
+.aq-note {
+  text-align: center;
+  color: #555;
+  margin-top: 0.5rem;
+  font-size: 0.9rem;
+}
+
+/* ---------- Day/Night Chip (prettier + shimmer) ---------- */
 .day-night {
+  position: relative;
+  overflow: hidden;
+
   display: inline-flex;
   align-items: center;
   gap: 0.45rem;
@@ -303,7 +353,6 @@ body.night .app {
     inset 0 1px 0 rgba(255, 255, 255, 0.4);
 }
 
-/* Day vs Night look */
 body.day .day-night {
   background: rgba(255, 255, 255, 0.22);
   color: rgba(0, 0, 0, 0.78);
@@ -315,7 +364,80 @@ body.night .day-night {
   border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
-/* Optional: subtle night tint (doesn’t wreck your design) */
+/* Shimmer */
+.day-night::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+
+  background: linear-gradient(
+    120deg,
+    transparent 30%,
+    rgba(255, 255, 255, 0.45),
+    transparent 70%
+  );
+
+  opacity: 0.35;
+  transform: translateX(-120%);
+  animation: shimmer 6s ease-in-out infinite;
+  pointer-events: none;
+}
+
+body.night .day-night::after {
+  background: linear-gradient(
+    120deg,
+    transparent 30%,
+    rgba(255, 255, 255, 0.25),
+    transparent 70%
+  );
+  opacity: 0.25;
+}
+
+@keyframes shimmer {
+  0% {
+    transform: translateX(-120%);
+  }
+  40% {
+    transform: translateX(120%);
+  }
+  100% {
+    transform: translateX(120%);
+  }
+}
+
+/* Optional: subtle night tint (kept from your file) */
 body.night .app {
   background: rgba(255, 255, 255, 0.92);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
+}
+
+/* ---------- Mobile tweaks ---------- */
+@media (max-width: 520px) {
+  body {
+    padding: 1rem;
+  }
+
+  .app {
+    padding: 1.25rem;
+    border-radius: 10px;
+  }
+
+  .search {
+    flex-direction: column;
+    gap: 0.6rem;
+  }
+
+  input,
+  button {
+    width: 100%;
+  }
+
+  .forecast {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .aq-grid {
+    grid-template-columns: 1fr;
+  }
 }

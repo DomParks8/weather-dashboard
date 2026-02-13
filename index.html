@@ -8,6 +8,7 @@
   </head>
   <body>
     <div id="weatherFx" class="fx"></div>
+
     <div class="app">
       <h1>Weather Dashboard</h1>
 
@@ -18,21 +19,57 @@
         <button id="searchBtn">Search</button>
       </div>
 
-      <div id="weatherOverlay" class="overlay"></div>
+      <!-- Navigation between endpoints -->
+      <nav class="tabs">
+        <button id="tabWeather" class="tab active">Weather</button>
+        <button id="tabAir" class="tab">Air Quality</button>
+      </nav>
 
       <p id="status"></p>
 
-      <div id="weather" class="weather hidden">
-        <h2 id="cityName"></h2>
+      <!-- Page 1: Weather endpoint -->
+      <section id="pageWeather">
+        <div id="weather" class="weather hidden">
+          <h2 id="cityName"></h2>
 
-        <div class="current">
-          <p><strong>Temperature:</strong> <span id="temp"></span> °F</p>
-          <p><strong>Wind:</strong> <span id="wind"></span> mph</p>
+          <div class="current">
+            <p><strong>Temperature:</strong> <span id="temp"></span> °F</p>
+            <p><strong>Wind:</strong> <span id="wind"></span> mph</p>
+          </div>
+
+          <h3>7-Day Forecast</h3>
+          <div id="forecast" class="forecast"></div>
+        </div>
+      </section>
+
+      <!-- Page 2: Air Quality endpoint -->
+      <section id="pageAir" class="hidden">
+        <h2>Air Quality</h2>
+
+        <div class="aq-grid">
+          <div class="aq-card">
+            <strong>US AQI</strong>
+            <div id="aqi">—</div>
+          </div>
+
+          <div class="aq-card">
+            <strong>PM2.5</strong>
+            <div id="pm25">—</div>
+          </div>
+
+          <div class="aq-card">
+            <strong>PM10</strong>
+            <div id="pm10">—</div>
+          </div>
+
+          <div class="aq-card">
+            <strong>Ozone (O₃)</strong>
+            <div id="o3">—</div>
+          </div>
         </div>
 
-        <h3>7-Day Forecast</h3>
-        <div id="forecast" class="forecast"></div>
-      </div>
+        <p class="aq-note">Values shown for the current hour.</p>
+      </section>
     </div>
 
     <script src="script.js"></script>
