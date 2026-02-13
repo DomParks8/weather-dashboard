@@ -1,3 +1,4 @@
+/* ===== Base ===== */
 * {
   box-sizing: border-box;
   font-family: Arial, sans-serif;
@@ -9,46 +10,59 @@ body {
   display: flex;
   justify-content: center;
   padding: 2rem;
+  min-height: 100vh;
 }
 
-/* App container */
+/* ===== App container ===== */
 .app {
   background: white;
   padding: 2rem;
-  border-radius: 8px;
-  max-width: 500px;
+  border-radius: 14px;
+  max-width: 540px;
   width: 100%;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-
-  /* keep app above the FX */
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.12);
   position: relative;
   z-index: 1;
 }
 
+/* ===== Top header ===== */
+.top {
+  display: grid;
+  gap: 0.6rem;
+  justify-items: center;
+  margin-bottom: 0.75rem;
+}
+
 h1 {
   text-align: center;
+  margin: 0.25rem 0 0;
+}
+
+/* ===== Search ===== */
+.search-wrap {
+  margin-top: 0.75rem;
 }
 
 .search {
   display: flex;
   gap: 0.5rem;
-  margin-top: 0.75rem;
 }
 
 input {
   flex: 1;
-  padding: 0.6rem 0.75rem;
-  border-radius: 8px;
+  padding: 0.65rem 0.8rem;
+  border-radius: 10px;
   border: 1px solid rgba(0, 0, 0, 0.12);
   outline: none;
 }
 
 button {
-  padding: 0.6rem 1rem;
+  padding: 0.65rem 1rem;
   cursor: pointer;
-  border-radius: 8px;
+  border-radius: 10px;
   border: 1px solid rgba(0, 0, 0, 0.12);
   background: #fff;
+  font-weight: 700;
 }
 
 button:hover {
@@ -61,60 +75,281 @@ input:focus-visible {
   outline-offset: 2px;
 }
 
+.hint {
+  margin: 0.55rem 0 0;
+  text-align: center;
+  color: #666;
+  font-size: 0.9rem;
+}
+
+kbd {
+  padding: 0.1rem 0.35rem;
+  border-radius: 6px;
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  background: rgba(0, 0, 0, 0.04);
+  font-size: 0.85em;
+}
+
+/* ===== Status ===== */
 #status {
   text-align: center;
-  margin-top: 1rem;
+  margin: 0.9rem 0 0.2rem;
   color: #555;
+  min-height: 1.2em;
 }
 
 .hidden {
   display: none;
 }
 
-.current {
-  margin-top: 1rem;
+/* ===== Reusable Card ===== */
+.card {
+  background: #f4f6f9;
+  border-radius: 12px;
+  padding: 0.9rem;
+  border: 1px solid rgba(0, 0, 0, 0.06);
 }
 
+/* Optional shimmer if you later add `.loading` to a container */
+.loading .card,
+.loading .forecast-day {
+  position: relative;
+  overflow: hidden;
+}
+.loading .card::after,
+.loading .forecast-day::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  transform: translateX(-120%);
+  background: linear-gradient(
+    120deg,
+    transparent 30%,
+    rgba(255, 255, 255, 0.65),
+    transparent 70%
+  );
+  animation: shimmer 1.25s infinite;
+}
+@keyframes shimmer {
+  to {
+    transform: translateX(120%);
+  }
+}
+
+/* ===== Weather area ===== */
+.title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+#cityName {
+  margin: 0.5rem 0 0;
+}
+
+.current {
+  margin-top: 0.8rem;
+}
+
+.section-title {
+  margin: 1rem 0 0.5rem;
+  text-align: center;
+}
+
+/* ===== Forecast ===== */
 .forecast {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
-  gap: 0.5rem;
-  margin-top: 1rem;
+  grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+  gap: 0.6rem;
+  margin-top: 0.6rem;
 }
 
 .forecast-day {
   background: #f4f6f9;
-  padding: 0.5rem;
-  border-radius: 6px;
+  padding: 0.65rem;
+  border-radius: 12px;
   text-align: center;
+  border: 1px solid rgba(0, 0, 0, 0.06);
 }
 
-/* Weather backgrounds */
-body.clear {
-  background: linear-gradient(to bottom, #4facfe, #00f2fe);
+/* ===== Tabs ===== */
+.tabs {
+  display: flex;
+  gap: 0.5rem;
+  margin: 1rem 0 0.35rem;
 }
 
-body.cloudy {
-  background: linear-gradient(to bottom, #bdc3c7, #2c3e50);
+.tab {
+  flex: 1;
+  padding: 0.6rem 0.8rem;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  background: rgba(255, 255, 255, 0.85);
+  border-radius: 999px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: transform 150ms ease, background 150ms ease;
 }
 
-body.rain {
-  background: linear-gradient(to bottom, #667db6, #485563);
+.tab:hover {
+  transform: translateY(-1px);
 }
 
-body.snow {
-  background: linear-gradient(to bottom, #e6e9f0, #eef1f5);
+.tab.active {
+  background: rgba(0, 0, 0, 0.1);
 }
 
-body.fog {
-  background: linear-gradient(to bottom, #d7d2cc, #304352);
+/* ===== Air Quality ===== */
+.aq-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
+  margin-top: 0.75rem;
 }
 
-body.storm {
-  background: linear-gradient(to bottom, #232526, #414345);
+.aq-card div {
+  font-size: 1.45rem;
+  font-weight: 900;
+  margin-top: 0.35rem;
 }
 
-/* ---------------- Weather FX Overlay ---------------- */
+/* ===== Alerts ===== */
+.alerts {
+  display: grid;
+  gap: 0.75rem;
+  margin-top: 0.75rem;
+}
+
+.alert-card {
+  background: #f4f6f9;
+  border-radius: 12px;
+  padding: 0.95rem;
+  border: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.alert-title {
+  font-weight: 900;
+  margin-bottom: 0.25rem;
+}
+
+.alert-meta {
+  font-size: 0.9rem;
+  color: #555;
+  margin-bottom: 0.5rem;
+}
+
+.alert-desc {
+  font-size: 0.95rem;
+  line-height: 1.35;
+}
+
+/* ===== Alert badge ===== */
+.alert-badge {
+  width: fit-content;
+  padding: 0.35rem 0.7rem;
+  border-radius: 999px;
+  font-weight: 900;
+  font-size: 0.85rem;
+  letter-spacing: 0.2px;
+  background: rgba(0, 0, 0, 0.08);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+/* ===== Notes / Footer ===== */
+.note {
+  text-align: center;
+  color: #666;
+  margin-top: 0.75rem;
+  font-size: 0.9rem;
+}
+
+.footer {
+  margin-top: 1.25rem;
+  text-align: center;
+  color: #777;
+}
+
+/* ===== Day/Night Chip ===== */
+.day-night {
+  position: relative;
+  overflow: hidden;
+
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+
+  width: fit-content;
+  padding: 0.45rem 0.85rem;
+  border-radius: 999px;
+
+  font-size: 0.85rem;
+  font-weight: 800;
+  letter-spacing: 0.2px;
+
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  background: rgba(255, 255, 255, 0.18);
+  color: rgba(0, 0, 0, 0.75);
+
+  backdrop-filter: blur(10px);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.35);
+
+  transition: transform 250ms ease, box-shadow 250ms ease, background 250ms ease,
+    color 250ms ease;
+}
+
+.day-night::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(
+    120deg,
+    transparent 30%,
+    rgba(255, 255, 255, 0.45),
+    transparent 70%
+  );
+  opacity: 0.35;
+  transform: translateX(-120%);
+  animation: chipShimmer 6s ease-in-out infinite;
+  pointer-events: none;
+}
+
+@keyframes chipShimmer {
+  0% {
+    transform: translateX(-120%);
+  }
+  40% {
+    transform: translateX(120%);
+  }
+  100% {
+    transform: translateX(120%);
+  }
+}
+
+body.day .day-night {
+  background: rgba(255, 255, 255, 0.22);
+  color: rgba(0, 0, 0, 0.78);
+}
+
+body.night .day-night {
+  background: rgba(0, 0, 0, 0.22);
+  color: rgba(255, 255, 255, 0.92);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+body.night .alert-badge {
+  background: rgba(0, 0, 0, 0.18);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+body.night .app {
+  background: rgba(255, 255, 255, 0.93);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.28);
+}
+
+/* ===== Weather FX Overlay ===== */
 .fx {
   position: fixed;
   inset: 0;
@@ -122,7 +357,27 @@ body.storm {
   z-index: 0;
 }
 
-/* ---------- CLEAR (sun pulse) ---------- */
+/* Weather backgrounds */
+body.clear {
+  background: linear-gradient(to bottom, #4facfe, #00f2fe);
+}
+body.cloudy {
+  background: linear-gradient(to bottom, #bdc3c7, #2c3e50);
+}
+body.rain {
+  background: linear-gradient(to bottom, #667db6, #485563);
+}
+body.snow {
+  background: linear-gradient(to bottom, #e6e9f0, #eef1f5);
+}
+body.fog {
+  background: linear-gradient(to bottom, #d7d2cc, #304352);
+}
+body.storm {
+  background: linear-gradient(to bottom, #232526, #414345);
+}
+
+/* Overlay effects */
 .fx.clear {
   background: radial-gradient(
       circle at 20% 20%,
@@ -148,7 +403,6 @@ body.storm {
   }
 }
 
-/* ---------- CLOUDY (slow drift) ---------- */
 .fx.cloudy {
   background: radial-gradient(
       circle at 20% 30%,
@@ -178,7 +432,6 @@ body.storm {
   }
 }
 
-/* ---------- FOG (haze wave) ---------- */
 .fx.fog {
   background: linear-gradient(
     0deg,
@@ -200,7 +453,6 @@ body.storm {
   }
 }
 
-/* ---------- RAIN (falling streaks) ---------- */
 .fx.rain {
   background-image: linear-gradient(
     transparent,
@@ -221,7 +473,6 @@ body.storm {
   }
 }
 
-/* ---------- SNOW (falling dots) ---------- */
 .fx.snow {
   background-image: radial-gradient(
       circle,
@@ -242,7 +493,6 @@ body.storm {
   }
 }
 
-/* ---------- STORM (dark + lightning) ---------- */
 .fx.storm {
   background: linear-gradient(0deg, rgba(0, 0, 0, 0.2), rgba(0, 0, 0, 0.35));
   animation: lightning 6.5s infinite;
@@ -267,152 +517,159 @@ body.storm {
   }
 }
 
-/* ---------- Tabs (Navigation) ---------- */
-.tabs {
-  display: flex;
-  gap: 0.5rem;
-  margin: 1rem 0 0.5rem;
+/* Animated objects: Sun / Thunder clouds / Lightning flash */
+.fx .sun,
+.fx .cloud,
+.fx .lightning {
+  position: absolute;
+  pointer-events: none;
+  opacity: 0;
+  transform: translateZ(0);
 }
 
-.tab {
-  flex: 1;
-  padding: 0.6rem 0.8rem;
-  border: 1px solid rgba(0, 0, 0, 0.1);
-  background: rgba(255, 255, 255, 0.7);
-  border-radius: 999px;
-  font-weight: 700;
-  cursor: pointer;
+/* Sunny: shining sun */
+.fx.clear .sun {
+  opacity: 1;
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  top: 60px;
+  right: 70px;
+  background: radial-gradient(
+    circle,
+    rgba(255, 255, 255, 0.9) 0%,
+    rgba(255, 255, 255, 0.35) 35%,
+    rgba(255, 255, 255, 0) 70%
+  );
+  box-shadow: 0 0 35px rgba(255, 255, 255, 0.55),
+    0 0 90px rgba(255, 255, 255, 0.25);
+  animation: sunGlow 4.5s ease-in-out infinite;
 }
-
-.tab.active {
-  background: rgba(0, 0, 0, 0.08);
-}
-
-/* ---------- Air Quality cards ---------- */
-.aq-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0.75rem;
-  margin-top: 0.75rem;
-}
-
-.aq-card {
-  background: #f4f6f9;
-  padding: 0.75rem;
-  border-radius: 10px;
-  text-align: center;
-}
-
-.aq-card div {
-  font-size: 1.4rem;
-  font-weight: 800;
-  margin-top: 0.25rem;
-}
-
-.aq-note {
-  text-align: center;
-  color: #555;
-  margin-top: 0.5rem;
-  font-size: 0.9rem;
-}
-
-/* ---------- Day/Night Chip (prettier + shimmer) ---------- */
-.day-night {
-  position: relative;
-  overflow: hidden;
-
-  display: inline-flex;
-  align-items: center;
-  gap: 0.45rem;
-
-  margin: 0.75rem auto 0;
-  width: fit-content;
-
-  padding: 0.45rem 0.85rem;
-  border-radius: 999px;
-
-  font-size: 0.85rem;
-  font-weight: 700;
-  letter-spacing: 0.2px;
-
-  border: 1px solid rgba(255, 255, 255, 0.35);
-  background: rgba(255, 255, 255, 0.18);
-  color: rgba(0, 0, 0, 0.75);
-
-  backdrop-filter: blur(10px);
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08),
-    inset 0 1px 0 rgba(255, 255, 255, 0.35);
-
-  transition: transform 250ms ease, box-shadow 250ms ease, background 250ms ease,
-    color 250ms ease;
-}
-
-.day-night:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 14px 30px rgba(0, 0, 0, 0.12),
-    inset 0 1px 0 rgba(255, 255, 255, 0.4);
-}
-
-body.day .day-night {
-  background: rgba(255, 255, 255, 0.22);
-  color: rgba(0, 0, 0, 0.78);
-}
-
-body.night .day-night {
-  background: rgba(0, 0, 0, 0.22);
-  color: rgba(255, 255, 255, 0.9);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-}
-
-/* Shimmer */
-.day-night::after {
+.fx.clear .sun::before {
   content: "";
   position: absolute;
-  inset: 0;
-  border-radius: inherit;
-
-  background: linear-gradient(
-    120deg,
-    transparent 30%,
-    rgba(255, 255, 255, 0.45),
-    transparent 70%
+  inset: -25px;
+  border-radius: 50%;
+  background: conic-gradient(
+    from 0deg,
+    rgba(255, 255, 255, 0),
+    rgba(255, 255, 255, 0.28),
+    rgba(255, 255, 255, 0),
+    rgba(255, 255, 255, 0.22),
+    rgba(255, 255, 255, 0)
   );
-
-  opacity: 0.35;
-  transform: translateX(-120%);
-  animation: shimmer 6s ease-in-out infinite;
-  pointer-events: none;
+  filter: blur(1px);
+  animation: sunRays 10s linear infinite;
+  opacity: 0.8;
 }
-
-body.night .day-night::after {
-  background: linear-gradient(
-    120deg,
-    transparent 30%,
-    rgba(255, 255, 255, 0.25),
-    transparent 70%
-  );
-  opacity: 0.25;
-}
-
-@keyframes shimmer {
-  0% {
-    transform: translateX(-120%);
-  }
-  40% {
-    transform: translateX(120%);
-  }
+@keyframes sunGlow {
+  0%,
   100% {
-    transform: translateX(120%);
+    transform: scale(1);
+    opacity: 0.95;
+  }
+  50% {
+    transform: scale(1.05);
+    opacity: 1;
+  }
+}
+@keyframes sunRays {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
   }
 }
 
-/* Optional: subtle night tint (kept from your file) */
-body.night .app {
-  background: rgba(255, 255, 255, 0.92);
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
+/* Storm: drifting thunder clouds */
+.fx.storm .cloud {
+  opacity: 0.75;
+  width: 220px;
+  height: 70px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.35);
+  filter: blur(0.5px);
+  box-shadow: 0 12px 25px rgba(0, 0, 0, 0.25);
+}
+.fx.storm .cloud::before,
+.fx.storm .cloud::after {
+  content: "";
+  position: absolute;
+  background: rgba(0, 0, 0, 0.35);
+  width: 90px;
+  height: 90px;
+  border-radius: 50%;
+  top: -45px;
+}
+.fx.storm .cloud::before {
+  left: 25px;
+}
+.fx.storm .cloud::after {
+  right: 25px;
+  width: 110px;
+  height: 110px;
+  top: -55px;
+}
+.fx.storm .cloud-1 {
+  top: 70px;
+  left: -260px;
+  animation: cloudMove 18s linear infinite;
+}
+.fx.storm .cloud-2 {
+  top: 140px;
+  left: -320px;
+  opacity: 0.55;
+  transform: scale(0.9);
+  animation: cloudMove 24s linear infinite;
+}
+@keyframes cloudMove {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(calc(100vw + 650px));
+  }
 }
 
-/* ---------- Mobile tweaks ---------- */
+/* Lightning flash */
+.fx.storm .lightning {
+  opacity: 0;
+  inset: 0;
+  position: absolute;
+  background: rgba(255, 255, 255, 0.7);
+  mix-blend-mode: overlay;
+  animation: lightningFlash 7.5s infinite;
+}
+@keyframes lightningFlash {
+  0%,
+  88%,
+  100% {
+    opacity: 0;
+  }
+  89% {
+    opacity: 0.55;
+  }
+  90% {
+    opacity: 0;
+  }
+  93% {
+    opacity: 0.35;
+  }
+  94% {
+    opacity: 0;
+  }
+}
+
+/* ===== Reduced motion ===== */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+
+/* ===== Mobile tweaks ===== */
 @media (max-width: 520px) {
   body {
     padding: 1rem;
@@ -420,7 +677,7 @@ body.night .app {
 
   .app {
     padding: 1.25rem;
-    border-radius: 10px;
+    border-radius: 12px;
   }
 
   .search {
@@ -439,5 +696,20 @@ body.night .app {
 
   .aq-grid {
     grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 520px) {
+  h1 {
+    font-size: 1.4rem;
+    line-height: 1.2;
+  }
+
+  h2 {
+    font-size: 1.15rem;
+  }
+
+  h3 {
+    font-size: 1rem;
   }
 }

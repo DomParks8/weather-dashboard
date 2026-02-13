@@ -1,4 +1,6 @@
-// --------- DOM Elements ---------
+"use strict";
+
+// ================= DOM ELEMENTS =================
 const searchBtn = document.getElementById("searchBtn");
 const locationInput = document.getElementById("locationInput");
 const statusEl = document.getElementById("status");
@@ -11,28 +13,57 @@ const forecastEl = document.getElementById("forecast");
 
 const weatherFx = document.getElementById("weatherFx");
 const dayNightEl = document.getElementById("dayNight");
+const alertBadgeEl = document.getElementById("alertBadge");
 
 // Tabs / Pages
 const tabWeather = document.getElementById("tabWeather");
 const tabAir = document.getElementById("tabAir");
+const tabAlerts = document.getElementById("tabAlerts");
+
 const pageWeather = document.getElementById("pageWeather");
 const pageAir = document.getElementById("pageAir");
+const pageAlerts = document.getElementById("pageAlerts");
 
-// Air Quality outputs
+// Air Quality
 const aqiEl = document.getElementById("aqi");
 const pm25El = document.getElementById("pm25");
 const pm10El = document.getElementById("pm10");
 const o3El = document.getElementById("o3");
 
-// Save last searched location so nav can re-fetch
+// Alerts
+const alertsListEl = document.getElementById("alertsList");
+
+// Save last searched location
 let lastLocation = null; // { latitude, longitude, name }
 
-// --------- Search Handling ---------
-searchBtn.addEventListener("click", () => {
-  const input = locationInput.value.trim();
+// ================= HELPERS =================
+function setStatus(msg) {
+  if (statusEl) statusEl.textContent = msg || "";
+}
 
+function requireLocation() {
+  if (!lastLocation) {
+    setStatus("Search a city or ZIP first.");
+    return false;
+  }
+  return true;
+}
+
+// ================= SEARCH =================
+if (searchBtn) {
+  searchBtn.addEventListener("click", () => runSearch());
+}
+
+if (locationInput) {
+  locationInput.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") runSearch();
+  });
+}
+
+function runSearch() {
+  const input = (locationInput?.value || "").trim();
   if (!input) {
-    statusEl.textContent = "Please enter a city or ZIP code.";
+    setStatus("Please enter a city or ZIP code.");
     return;
   }
 
@@ -41,191 +72,303 @@ searchBtn.addEventListener("click", () => {
   } else {
     fetchWeatherByCity(input);
   }
-});
+}
 
 function fetchWeatherByCity(city) {
   fetchWeather(city);
 }
 
-// ZIP -> lat/lon using Zippopotam.us (accurate)
+// ZIP → lat/lon
 async function fetchWeatherByZip(zip) {
   try {
-    statusEl.textContent = "Loading...";
-    weatherEl.classList.add("hidden");
+    setStatus("Loading...");
+    weatherEl?.classList.add("hidden");
 
-    const zipRes = await fetch(`https://api.zippopotam.us/us/${zip}`);
-    if (!zipRes.ok) {
-      statusEl.textContent = "ZIP code not found.";
-      return;
-    }
+    const res = await fetch(`https://api.zippopotam.us/us/${zip}`);
+    if (!res.ok) throw new Error("ZIP not found");
 
-    const zipData = await zipRes.json();
-    const place = zipData.places?.[0];
-    if (!place) {
-      statusEl.textContent = "ZIP code not found.";
-      return;
-    }
+    const data = await res.json();
+    const place = data.places?.[0];
+    if (!place) throw new Error("No places");
 
     const latitude = Number(place.latitude);
     const longitude = Number(place.longitude);
-    const locationLabel = `${place["place name"]}, ${place["state abbreviation"]}`;
+    const name = `${place["place name"]}, ${place["state abbreviation"]}`;
 
-    // Save for tab navigation
-    lastLocation = { latitude, longitude, name: locationLabel };
-
-    // Default to Weather tab after a search
+    lastLocation = { latitude, longitude, name };
     setActiveTab("weather");
 
-    // Fetch Weather endpoint (GET)
-    await fetchWeatherByCoords(latitude, longitude, locationLabel);
+    await fetchWeatherByCoords(latitude, longitude, name);
   } catch (err) {
-    statusEl.textContent = "Error looking up ZIP code.";
     console.error(err);
+    setStatus("ZIP code not found.");
   }
 }
 
-// City -> lat/lon using Open-Meteo geocoding, then coords -> weather
+// City → lat/lon
 async function fetchWeather(city) {
   try {
-    statusEl.textContent = "Loading...";
-    weatherEl.classList.add("hidden");
+    setStatus("Loading...");
+    weatherEl?.classList.add("hidden");
 
-    // Geocoding (city -> lat/lon)
-    const geoRes = await fetch(
+    const res = await fetch(
       `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(
         city
       )}&count=1`
     );
-    const geoData = await geoRes.json();
+    const data = await res.json();
+    if (!data.results?.length) throw new Error("City not found");
 
-    if (!geoData.results || geoData.results.length === 0) {
-      statusEl.textContent = "City not found.";
-      return;
-    }
-
-    const { latitude, longitude, name } = geoData.results[0];
-
-    // Save for tab navigation
+    const { latitude, longitude, name } = data.results[0];
     lastLocation = { latitude, longitude, name };
-
-    // Default to Weather tab after a search
     setActiveTab("weather");
 
-    // Fetch Weather endpoint (GET)
     await fetchWeatherByCoords(latitude, longitude, name);
-  } catch (error) {
-    statusEl.textContent = "Something went wrong. Please try again.";
-    console.error(error);
+  } catch (err) {
+    console.error(err);
+    setStatus("City not found.");
   }
 }
 
-// --------- Tabs (Navigation Between Endpoints) ---------
-tabWeather.addEventListener("click", async () => {
-  setActiveTab("weather");
-  if (!lastLocation) {
-    statusEl.textContent = "Search a city or ZIP first.";
-    return;
-  }
+// ================= TABS =================
+if (tabWeather) {
+  tabWeather.addEventListener("click", async () => {
+    setActiveTab("weather");
+    if (!requireLocation()) return;
 
-  // NEW GET request to Weather endpoint
-  await fetchWeatherByCoords(
-    lastLocation.latitude,
-    lastLocation.longitude,
-    lastLocation.name
-  );
-});
-
-tabAir.addEventListener("click", async () => {
-  setActiveTab("air");
-  if (!lastLocation) {
-    statusEl.textContent = "Search a city or ZIP first.";
-    return;
-  }
-
-  // NEW GET request to Air Quality endpoint
-  await fetchAirQuality(lastLocation.latitude, lastLocation.longitude);
-});
-
-function setActiveTab(which) {
-  const isWeather = which === "weather";
-
-  tabWeather.classList.toggle("active", isWeather);
-  tabAir.classList.toggle("active", !isWeather);
-
-  pageWeather.classList.toggle("hidden", !isWeather);
-  pageAir.classList.toggle("hidden", isWeather);
+    await fetchWeatherByCoords(
+      lastLocation.latitude,
+      lastLocation.longitude,
+      lastLocation.name
+    );
+  });
 }
 
-// --------- Endpoint #1: Weather Forecast (Open-Meteo) ---------
+if (tabAir) {
+  tabAir.addEventListener("click", async () => {
+    setActiveTab("air");
+    if (!requireLocation()) return;
+
+    await fetchAirQuality(lastLocation.latitude, lastLocation.longitude);
+  });
+}
+
+if (tabAlerts) {
+  tabAlerts.addEventListener("click", async () => {
+    setActiveTab("alerts");
+    if (!requireLocation()) return;
+
+    setStatus("Loading NWS alerts...");
+    await refreshAlerts(lastLocation.latitude, lastLocation.longitude, true);
+    setStatus("");
+  });
+}
+
+function setActiveTab(tab) {
+  tabWeather?.classList.toggle("active", tab === "weather");
+  tabAir?.classList.toggle("active", tab === "air");
+  tabAlerts?.classList.toggle("active", tab === "alerts");
+
+  pageWeather?.classList.toggle("hidden", tab !== "weather");
+  pageAir?.classList.toggle("hidden", tab !== "air");
+  pageAlerts?.classList.toggle("hidden", tab !== "alerts");
+}
+
+// ================= ENDPOINT #1: WEATHER =================
 async function fetchWeatherByCoords(latitude, longitude, name) {
   try {
-    statusEl.textContent = "Loading weather...";
+    setStatus("Loading weather...");
 
-    const weatherRes = await fetch(
-      `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&daily=temperature_2m_max,temperature_2m_min&current_weather=true&temperature_unit=fahrenheit&windspeed_unit=mph&timezone=auto`
+    const res = await fetch(
+      `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current_weather=true&daily=temperature_2m_max,temperature_2m_min&temperature_unit=fahrenheit&windspeed_unit=mph&timezone=auto`
     );
-    const weatherData = await weatherRes.json();
+    if (!res.ok) throw new Error("Weather fetch failed");
 
-    updateDayNight(weatherData);
+    const data = await res.json();
 
-    cityNameEl.textContent = name;
-    tempEl.textContent = weatherData.current_weather.temperature;
-    windEl.textContent = weatherData.current_weather.windspeed;
+    // Day/Night + local time chip
+    updateDayNight(data);
 
-    const weatherCode = weatherData.current_weather.weathercode;
-    setBackground(weatherCode);
+    // Current weather
+    if (cityNameEl) cityNameEl.textContent = name;
+    if (tempEl) tempEl.textContent = data.current_weather?.temperature ?? "—";
+    if (windEl) windEl.textContent = data.current_weather?.windspeed ?? "—";
 
-    forecastEl.innerHTML = "";
-    weatherData.daily.time.forEach((day, index) => {
-      const div = document.createElement("div");
-      div.className = "forecast-day";
-      div.innerHTML = `
-        <strong>${new Date(day).toLocaleDateString("en-US", {
+    // Background / FX
+    const code = data.current_weather?.weathercode;
+    if (typeof code === "number") setBackground(code);
+
+    // Forecast
+    if (forecastEl) {
+      forecastEl.innerHTML = "";
+      const times = data.daily?.time || [];
+      const maxes = data.daily?.temperature_2m_max || [];
+      const mins = data.daily?.temperature_2m_min || [];
+
+      times.forEach((day, i) => {
+        const label = new Date(day).toLocaleDateString("en-US", {
           weekday: "short",
-        })}</strong>
-        <p>${weatherData.daily.temperature_2m_max[index]}° /
-        ${weatherData.daily.temperature_2m_min[index]}°</p>
-      `;
-      forecastEl.appendChild(div);
-    });
+        });
 
-    statusEl.textContent = "";
-    weatherEl.classList.remove("hidden");
+        const div = document.createElement("div");
+        div.className = "forecast-day";
+        div.innerHTML = `
+          <strong>${label}</strong>
+          <p>${maxes[i] ?? "—"}° / ${mins[i] ?? "—"}°</p>
+        `;
+        forecastEl.appendChild(div);
+      });
+    }
+
+    // Update badge (no list render on weather page)
+    await refreshAlerts(latitude, longitude, false);
+
+    setStatus("");
+    weatherEl?.classList.remove("hidden");
   } catch (err) {
-    statusEl.textContent = "Weather request failed. Try again.";
     console.error(err);
+    setStatus("Weather request failed. Try again.");
   }
 }
 
-// --------- Endpoint #2: Air Quality (Open-Meteo) ---------
+// ================= ENDPOINT #2: AIR QUALITY =================
 async function fetchAirQuality(latitude, longitude) {
   try {
-    statusEl.textContent = "Loading air quality...";
+    setStatus("Loading air quality...");
 
     const res = await fetch(
       `https://air-quality-api.open-meteo.com/v1/air-quality?latitude=${latitude}&longitude=${longitude}&hourly=us_aqi,pm2_5,pm10,ozone&timezone=auto`
     );
+    if (!res.ok) throw new Error("Air quality fetch failed");
+
     const data = await res.json();
 
-    // Use the first hourly entry for the assignment
+    // Use the first hourly entry
     const idx = 0;
 
-    aqiEl.textContent = data.hourly?.us_aqi?.[idx] ?? "—";
-    pm25El.textContent = data.hourly?.pm2_5?.[idx] ?? "—";
-    pm10El.textContent = data.hourly?.pm10?.[idx] ?? "—";
-    o3El.textContent = data.hourly?.ozone?.[idx] ?? "—";
+    if (aqiEl) aqiEl.textContent = data.hourly?.us_aqi?.[idx] ?? "—";
+    if (pm25El) pm25El.textContent = data.hourly?.pm2_5?.[idx] ?? "—";
+    if (pm10El) pm10El.textContent = data.hourly?.pm10?.[idx] ?? "—";
+    if (o3El) o3El.textContent = data.hourly?.ozone?.[idx] ?? "—";
 
-    statusEl.textContent = "";
+    setStatus("");
   } catch (err) {
-    statusEl.textContent = "Air quality request failed. Try again.";
     console.error(err);
+    setStatus("Air quality request failed. Try again.");
   }
 }
 
-// --------- Day/Night Indicator (Local Time at Location) ---------
+// ================= ENDPOINT #3: NWS ALERTS =================
+async function refreshAlerts(latitude, longitude, renderList) {
+  // badge
+  if (alertBadgeEl) {
+    alertBadgeEl.classList.remove("hidden");
+    alertBadgeEl.textContent = "⚠️ Checking alerts...";
+  }
+
+  if (renderList && alertsListEl) alertsListEl.innerHTML = "";
+
+  try {
+    const res = await fetch(
+      `https://api.weather.gov/alerts/active?point=${latitude},${longitude}`
+    );
+
+    if (!res.ok) {
+      if (alertBadgeEl)
+        alertBadgeEl.textContent = "⚠️ Alerts unavailable (NWS)";
+      if (renderList && alertsListEl) {
+        alertsListEl.innerHTML = `
+          <div class="alert-card">
+            <div class="alert-title">Alerts unavailable</div>
+            <div class="alert-desc">Could not load alerts right now.</div>
+          </div>
+        `;
+      }
+      return;
+    }
+
+    const data = await res.json();
+    const features = data.features || [];
+    const count = features.length;
+
+    if (count === 0) {
+      if (alertBadgeEl) alertBadgeEl.textContent = "✅ No active alerts";
+      if (renderList && alertsListEl) {
+        alertsListEl.innerHTML = `
+          <div class="alert-card">
+            <div class="alert-title">No active alerts</div>
+            <div class="alert-desc">There are currently no watches/warnings/advisories for this area.</div>
+          </div>
+        `;
+      }
+      return;
+    }
+
+    if (alertBadgeEl) alertBadgeEl.textContent = `⚠️ Active Alerts: ${count}`;
+
+    if (renderList && alertsListEl) {
+      alertsListEl.innerHTML = features
+        .slice(0, 8)
+        .map((f) => {
+          const p = f.properties || {};
+          const event = p.event || "Alert";
+          const severity = p.severity || "Unknown";
+          const urgency = p.urgency || "Unknown";
+          const headline = p.headline || "";
+          const ends = p.ends || p.expires || "";
+          const descRaw = p.description || "";
+          const desc =
+            descRaw.length > 280 ? descRaw.slice(0, 280) + "..." : descRaw;
+
+          return `
+            <div class="alert-card">
+              <div class="alert-title">${event}</div>
+              <div class="alert-meta">
+                Severity: <strong>${severity}</strong> • Urgency: <strong>${urgency}</strong>
+                ${
+                  ends
+                    ? `• Ends: <strong>${new Date(
+                        ends
+                      ).toLocaleString()}</strong>`
+                    : ""
+                }
+              </div>
+              ${
+                headline
+                  ? `<div class="alert-desc"><strong>${headline}</strong></div>`
+                  : ""
+              }
+              ${
+                desc
+                  ? `<div class="alert-desc">${desc.replace(
+                      /\n/g,
+                      "<br>"
+                    )}</div>`
+                  : ""
+              }
+            </div>
+          `;
+        })
+        .join("");
+    }
+  } catch (err) {
+    console.error(err);
+    if (alertBadgeEl) alertBadgeEl.textContent = "⚠️ Alerts check failed";
+    if (renderList && alertsListEl) {
+      alertsListEl.innerHTML = `
+        <div class="alert-card">
+          <div class="alert-title">Alerts check failed</div>
+          <div class="alert-desc">Please try again.</div>
+        </div>
+      `;
+    }
+  }
+}
+
+// ================= DAY / NIGHT CHIP =================
 function updateDayNight(weatherData) {
   const localIso = weatherData?.current_weather?.time;
-  if (!localIso) return;
+  if (!localIso || !dayNightEl) return;
 
   const localDate = new Date(localIso);
   const hour = localDate.getHours();
@@ -245,7 +388,7 @@ function updateDayNight(weatherData) {
     : `🌙 Night • ${formattedTime} ${tz}`;
 }
 
-// --------- Background + Weather FX ---------
+// ================= BACKGROUND / FX =================
 function setBackground(code) {
   document.body.classList.remove(
     "clear",
@@ -255,25 +398,18 @@ function setBackground(code) {
     "snow",
     "storm"
   );
-  weatherFx.className = "fx";
+  if (weatherFx) weatherFx.className = "fx";
 
-  if (code === 0) {
-    document.body.classList.add("clear");
-    weatherFx.classList.add("clear");
-  } else if (code >= 1 && code <= 3) {
-    document.body.classList.add("cloudy");
-    weatherFx.classList.add("cloudy");
-  } else if (code === 45 || code === 48) {
-    document.body.classList.add("fog");
-    weatherFx.classList.add("fog");
-  } else if ((code >= 51 && code <= 67) || (code >= 80 && code <= 82)) {
-    document.body.classList.add("rain");
-    weatherFx.classList.add("rain");
-  } else if (code >= 71 && code <= 77) {
-    document.body.classList.add("snow");
-    weatherFx.classList.add("snow");
-  } else if (code >= 95) {
-    document.body.classList.add("storm");
-    weatherFx.classList.add("storm");
+  if (code === 0) add("clear");
+  else if (code >= 1 && code <= 3) add("cloudy");
+  else if (code === 45 || code === 48) add("fog");
+  else if ((code >= 51 && code <= 67) || (code >= 80 && code <= 82))
+    add("rain");
+  else if (code >= 71 && code <= 77) add("snow");
+  else if (code >= 95) add("storm");
+
+  function add(cls) {
+    document.body.classList.add(cls);
+    weatherFx?.classList.add(cls);
   }
 }

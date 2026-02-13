@@ -6,31 +6,53 @@
     <title>Weather Dashboard</title>
     <link rel="stylesheet" href="styles.css" />
   </head>
+
   <body>
-    <div id="weatherFx" class="fx"></div>
+    <!-- Weather FX overlay (animated objects live inside here) -->
+    <div id="weatherFx" class="fx">
+      <div class="sun"></div>
+      <div class="cloud cloud-1"></div>
+      <div class="cloud cloud-2"></div>
+      <div class="lightning"></div>
+    </div>
 
     <div class="app">
-      <h1>Weather Dashboard</h1>
-
-      <div id="dayNight" class="day-night"></div>
-
-      <div class="search">
-        <input type="text" id="locationInput" placeholder="Enter city or Zip" />
-        <button id="searchBtn">Search</button>
+      <!-- Header: title + day/night chip -->
+      <div class="top">
+        <h1>Weather Dashboard</h1>
+        <div id="dayNight" class="day-night" aria-live="polite"></div>
       </div>
 
-      <!-- Navigation between endpoints -->
+      <div class="search-wrap">
+        <div class="search">
+          <input
+            type="text"
+            id="locationInput"
+            placeholder="Enter city or ZIP"
+          />
+          <button id="searchBtn" type="button">Search</button>
+        </div>
+        <p class="hint">Tip: Press <kbd>Enter</kbd> after typing.</p>
+      </div>
+
+      <!-- Navigation between endpoints/pages -->
       <nav class="tabs">
-        <button id="tabWeather" class="tab active">Weather</button>
-        <button id="tabAir" class="tab">Air Quality</button>
+        <button id="tabWeather" class="tab active" type="button">
+          Weather
+        </button>
+        <button id="tabAir" class="tab" type="button">Air Quality</button>
+        <button id="tabAlerts" class="tab" type="button">Alerts (NWS)</button>
       </nav>
 
-      <p id="status"></p>
+      <p id="status" role="status" aria-live="polite"></p>
 
       <!-- Page 1: Weather endpoint -->
       <section id="pageWeather">
         <div id="weather" class="weather hidden">
-          <h2 id="cityName"></h2>
+          <div class="title-row">
+            <h2 id="cityName"></h2>
+            <div id="alertBadge" class="alert-badge hidden"></div>
+          </div>
 
           <div class="current">
             <p><strong>Temperature:</strong> <span id="temp"></span> °F</p>
@@ -70,6 +92,20 @@
 
         <p class="aq-note">Values shown for the current hour.</p>
       </section>
+
+      <!-- Page 3: Alerts endpoint -->
+      <section id="pageAlerts" class="hidden">
+        <h2>Active Alerts</h2>
+        <div id="alertsList" class="alerts"></div>
+        <p class="alerts-note">Source: National Weather Service (US only)</p>
+      </section>
+
+      <p class="footer">
+        <small
+          >Data: Open-Meteo • Air Quality: Open-Meteo • Alerts: NWS • ZIP:
+          Zippopotam.us</small
+        >
+      </p>
     </div>
 
     <script src="script.js"></script>
