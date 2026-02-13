@@ -728,3 +728,216 @@ body.night .fx.clear .sun {
 body.night .fx.clear {
   opacity: 0.35;
 }
+
+/* ===== Layering for animated backgrounds (Option A - REQUIRED) ===== */
+.bg-scene {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+}
+
+.fx {
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+}
+
+.app {
+  position: relative;
+  z-index: 2;
+}
+
+/* ===== Animated Weather FX (overlay) ===== */
+.fx {
+  pointer-events: none;
+}
+
+/* Hide all FX by default */
+.fx .sun,
+.fx .cloud,
+.fx .lightning {
+  opacity: 0;
+}
+
+/* ---------- RAIN (moving streaks) ---------- */
+.fx.rain::before,
+.fx.rain::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: linear-gradient(
+    transparent,
+    rgba(255, 255, 255, 0.35),
+    transparent
+  );
+  background-size: 2px 18px;
+  opacity: 0.45;
+  transform: skewX(-12deg);
+  animation: rainFall 0.55s linear infinite;
+}
+
+.fx.rain::after {
+  opacity: 0.25;
+  background-size: 3px 26px;
+  animation-duration: 0.75s;
+}
+
+@keyframes rainFall {
+  from {
+    background-position: 0 0;
+  }
+  to {
+    background-position: 0 30px;
+  }
+}
+
+/* ---------- SNOW (falling dots) ---------- */
+.fx.snow::before,
+.fx.snow::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(
+      circle,
+      rgba(255, 255, 255, 0.85) 2px,
+      transparent 3px
+    ),
+    radial-gradient(circle, rgba(255, 255, 255, 0.55) 1.5px, transparent 3px);
+  background-size: 70px 70px, 110px 110px;
+  opacity: 0.7;
+  animation: snowFall 6s linear infinite;
+}
+
+.fx.snow::after {
+  opacity: 0.45;
+  filter: blur(0.4px);
+  animation-duration: 9s;
+}
+
+@keyframes snowFall {
+  from {
+    background-position: 0 -70px, 30px -110px;
+  }
+  to {
+    background-position: 0 160px, 30px 260px;
+  }
+}
+
+/* ---------- CLOUDY / WIND (cloud drift) ---------- */
+.fx.cloudy .cloud {
+  opacity: 0.75;
+  width: 240px;
+  height: 70px;
+  border-radius: 999px;
+  position: absolute;
+  top: 80px;
+  left: -280px;
+  background: rgba(255, 255, 255, 0.25);
+  filter: blur(0.4px);
+  box-shadow: 0 12px 25px rgba(0, 0, 0, 0.1);
+  animation: cloudMove 22s linear infinite;
+}
+
+.fx.cloudy .cloud-2 {
+  top: 150px;
+  opacity: 0.55;
+  transform: scale(0.9);
+  animation-duration: 30s;
+}
+
+.fx.cloudy .cloud::before,
+.fx.cloudy .cloud::after {
+  content: "";
+  position: absolute;
+  background: rgba(255, 255, 255, 0.25);
+  width: 90px;
+  height: 90px;
+  border-radius: 50%;
+  top: -45px;
+}
+.fx.cloudy .cloud::before {
+  left: 25px;
+}
+.fx.cloudy .cloud::after {
+  right: 25px;
+  width: 110px;
+  height: 110px;
+  top: -55px;
+}
+
+@keyframes cloudMove {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(calc(100vw + 650px));
+  }
+}
+
+/* ---------- CLEAR (sun shimmer) ---------- */
+.fx.clear .sun {
+  opacity: 1;
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  position: absolute;
+  top: 60px;
+  right: 70px;
+  background: radial-gradient(
+    circle,
+    rgba(255, 255, 255, 0.95) 0%,
+    rgba(255, 255, 255, 0.35) 35%,
+    rgba(255, 255, 255, 0) 70%
+  );
+  box-shadow: 0 0 35px rgba(255, 255, 255, 0.55),
+    0 0 90px rgba(255, 255, 255, 0.25);
+  animation: sunGlow 4.5s ease-in-out infinite;
+}
+
+@keyframes sunGlow {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 0.9;
+  }
+  50% {
+    transform: scale(1.06);
+    opacity: 1;
+  }
+}
+
+/* Don’t show sun at night */
+body.night .fx.clear .sun {
+  opacity: 0 !important;
+}
+
+/* ---------- STORM (lightning flashes) ---------- */
+.fx.storm .lightning {
+  opacity: 0;
+  position: absolute;
+  inset: 0;
+  background: rgba(255, 255, 255, 0.75);
+  mix-blend-mode: overlay;
+  animation: lightningFlash 7.5s infinite;
+}
+
+@keyframes lightningFlash {
+  0%,
+  88%,
+  100% {
+    opacity: 0;
+  }
+  89% {
+    opacity: 0.55;
+  }
+  90% {
+    opacity: 0;
+  }
+  93% {
+    opacity: 0.35;
+  }
+  94% {
+    opacity: 0;
+  }
+}
