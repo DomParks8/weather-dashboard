@@ -23,6 +23,11 @@
         <div id="dayNight" class="day-night" aria-live="polite"></div>
       </div>
 
+      <div class="unit-toggle" role="group" aria-label="Temperature unit">
+        <button id="unitF" class="unit active" type="button">°F</button>
+        <button id="unitC" class="unit" type="button">°C</button>
+      </div>
+
       <div class="search-wrap">
         <div class="search">
           <input
@@ -55,8 +60,19 @@
           </div>
 
           <div class="current">
-            <p><strong>Temperature:</strong> <span id="temp"></span> °F</p>
+            <p>
+              <strong>Temperature:</strong>
+              <span id="temp"></span> <span id="tempUnit">°F</span>
+            </p>
+
             <p><strong>Wind:</strong> <span id="wind"></span> mph</p>
+            <div class="wind-anim" aria-hidden="true">
+              <span class="wind-line"></span>
+              <span class="wind-line"></span>
+              <span class="wind-line"></span>
+            </div>
+
+            <p><strong>Condition:</strong> <span id="condition"></span></p>
           </div>
 
           <h3>7-Day Forecast</h3>

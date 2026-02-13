@@ -11,6 +11,12 @@ const tempEl = document.getElementById("temp");
 const windEl = document.getElementById("wind");
 const forecastEl = document.getElementById("forecast");
 
+const conditionEl = document.getElementById("condition");
+const tempUnitEl = document.getElementById("tempUnit");
+
+const unitFBtn = document.getElementById("unitF");
+const unitCBtn = document.getElementById("unitC");
+
 const weatherFx = document.getElementById("weatherFx");
 const dayNightEl = document.getElementById("dayNight");
 const alertBadgeEl = document.getElementById("alertBadge");
@@ -35,6 +41,39 @@ const alertsListEl = document.getElementById("alertsList");
 
 // Save last searched location
 let lastLocation = null; // { latitude, longitude, name }
+
+//Temp conversion
+let tempUnit = "fahrenheit"; // "fahrenheit" | "celsius"
+
+if (unitFBtn) {
+  unitFBtn.addEventListener("click", async () => {
+    tempUnit = "fahrenheit";
+    unitFBtn.classList.add("active");
+    unitCBtn?.classList.remove("active");
+    if (lastLocation) {
+      await fetchWeatherByCoords(
+        lastLocation.latitude,
+        lastLocation.longitude,
+        lastLocation.name
+      );
+    }
+  });
+}
+
+if (unitCBtn) {
+  unitCBtn.addEventListener("click", async () => {
+    tempUnit = "celsius";
+    unitCBtn.classList.add("active");
+    unitFBtn?.classList.remove("active");
+    if (lastLocation) {
+      await fetchWeatherByCoords(
+        lastLocation.latitude,
+        lastLocation.longitude,
+        lastLocation.name
+      );
+    }
+  });
+}
 
 // ================= HELPERS =================
 function setStatus(msg) {
@@ -180,22 +219,50 @@ async function fetchWeatherByCoords(latitude, longitude, name) {
     setStatus("Loading weather...");
 
     const res = await fetch(
-      `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current_weather=true&daily=temperature_2m_max,temperature_2m_min&temperature_unit=fahrenheit&windspeed_unit=mph&timezone=auto`
+      `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}` +
+        `&current_weather=true` +
+        `&daily=temperature_2m_max,temperature_2m_min` +
+        `&temperature_unit=${tempUnit}` +
+        `&windspeed_unit=mph` +
+        `&timezone=auto`
     );
     if (!res.ok) throw new Error("Weather fetch failed");
 
     const data = await res.json();
 
-    // Day/Night + local time chip
+    // Day/Night + local time chip (returns isDay if you want it later)
     updateDayNight(data);
 
     // Current weather
     if (cityNameEl) cityNameEl.textContent = name;
-    if (tempEl) tempEl.textContent = data.current_weather?.temperature ?? "—";
-    if (windEl) windEl.textContent = data.current_weather?.windspeed ?? "—";
+
+    const currentTemp = data.current_weather?.temperature;
+    const currentWind = data.current_weather?.windspeed;
+    const code = data.current_weather?.weathercode;
+
+    if (tempEl) {
+      const prev = Number(tempEl.textContent);
+      const next = currentTemp;
+
+      tempEl.classList.add("bump");
+      animateNumber(tempEl, prev, next, 520, 1);
+      setTimeout(() => tempEl.classList.remove("bump"), 200);
+    }
+
+    if (windEl) windEl.textContent = currentWind ?? "—";
+    setWindAnimation(currentWind);
+
+    // Unit label next to current temp
+    if (tempUnitEl)
+      tempUnitEl.textContent = tempUnit === "celsius" ? "°C" : "°F";
+
+    // Condition label (Clear/Rain/Snow/etc)
+    if (conditionEl) {
+      conditionEl.textContent =
+        typeof code === "number" ? weatherCodeToText(code) : "—";
+    }
 
     // Background / FX
-    const code = data.current_weather?.weathercode;
     if (typeof code === "number") setBackground(code);
 
     // Forecast
@@ -204,6 +271,7 @@ async function fetchWeatherByCoords(latitude, longitude, name) {
       const times = data.daily?.time || [];
       const maxes = data.daily?.temperature_2m_max || [];
       const mins = data.daily?.temperature_2m_min || [];
+      const unitSymbol = tempUnit === "celsius" ? "°C" : "°F";
 
       times.forEach((day, i) => {
         const label = new Date(day).toLocaleDateString("en-US", {
@@ -213,9 +281,11 @@ async function fetchWeatherByCoords(latitude, longitude, name) {
         const div = document.createElement("div");
         div.className = "forecast-day";
         div.innerHTML = `
-          <strong>${label}</strong>
-          <p>${maxes[i] ?? "—"}° / ${mins[i] ?? "—"}°</p>
-        `;
+            <strong>${label}</strong>
+            <p>${maxes[i] ?? "—"}${unitSymbol} / ${
+          mins[i] ?? "—"
+        }${unitSymbol}</p>
+          `;
         forecastEl.appendChild(div);
       });
     }
@@ -365,18 +435,48 @@ async function refreshAlerts(latitude, longitude, renderList) {
   }
 }
 
+//Wind animation
+function setWindAnimation(mph) {
+  // clamp to a reasonable range so it doesn't get ridiculous
+  const w = Math.max(0, Math.min(Number(mph) || 0, 35));
+
+  // Map wind speed -> duration (lower duration = faster animation)
+  // 0 mph  -> ~3.2s
+  // 10 mph -> ~2.2s
+  // 25 mph -> ~1.4s
+  const duration = 3.2 - (w / 35) * 1.8; // 3.2 -> 1.4
+
+  document.documentElement.style.setProperty(
+    "--wind-speed",
+    `${duration.toFixed(2)}s`
+  );
+}
+
 // ================= DAY / NIGHT CHIP =================
 function updateDayNight(weatherData) {
-  const localIso = weatherData?.current_weather?.time;
-  if (!localIso || !dayNightEl) return;
+  const offsetSec = weatherData?.utc_offset_seconds;
+  if (typeof offsetSec !== "number" || !dayNightEl) return;
 
-  const localDate = new Date(localIso);
-  const hour = localDate.getHours();
+  // "Now" in UTC -> apply the location offset from Open-Meteo
+  const nowUtcMs = Date.now();
+  const localMs = nowUtcMs + offsetSec * 1000;
+  const localDate = new Date(localMs);
+
+  // Use "UTC" timezone to prevent the browser from re-applying its own offset
+  const hour = Number(
+    localDate.toLocaleString("en-US", {
+      hour: "numeric",
+      hour12: false,
+      timeZone: "UTC",
+    })
+  );
+
   const isDay = hour >= 6 && hour < 18;
 
   const formattedTime = localDate.toLocaleTimeString("en-US", {
     hour: "numeric",
     minute: "2-digit",
+    timeZone: "UTC",
   });
 
   document.body.classList.toggle("day", isDay);
@@ -386,6 +486,8 @@ function updateDayNight(weatherData) {
   dayNightEl.textContent = isDay
     ? `☀️ Day • ${formattedTime} ${tz}`
     : `🌙 Night • ${formattedTime} ${tz}`;
+
+  return isDay;
 }
 
 // ================= BACKGROUND / FX =================
@@ -412,4 +514,45 @@ function setBackground(code) {
     document.body.classList.add(cls);
     weatherFx?.classList.add(cls);
   }
+}
+
+//============Weather code=============
+function weatherCodeToText(code) {
+  if (code === 0) return "Clear";
+  if (code >= 1 && code <= 3) return "Partly cloudy";
+  if (code === 45 || code === 48) return "Fog";
+  if (code >= 51 && code <= 57) return "Drizzle";
+  if (code >= 61 && code <= 67) return "Rain";
+  if (code >= 71 && code <= 77) return "Snow";
+  if (code >= 80 && code <= 82) return "Rain showers";
+  if (code >= 85 && code <= 86) return "Snow showers";
+  if (code >= 95) return "Thunderstorm";
+  return "Unknown";
+}
+
+function animateNumber(el, from, to, durationMs = 500, decimals = 1) {
+  if (!el) return;
+
+  const start = performance.now();
+  const f = Number(from);
+  const t = Number(to);
+
+  // If values are missing, just set immediately
+  if (!Number.isFinite(f) || !Number.isFinite(t)) {
+    el.textContent = Number.isFinite(t) ? t.toFixed(decimals) : "—";
+    return;
+  }
+
+  function tick(now) {
+    const p = Math.min(1, (now - start) / durationMs);
+    // easeOutCubic
+    const eased = 1 - Math.pow(1 - p, 3);
+    const val = f + (t - f) * eased;
+
+    el.textContent = val.toFixed(decimals);
+
+    if (p < 1) requestAnimationFrame(tick);
+  }
+
+  requestAnimationFrame(tick);
 }
