@@ -230,7 +230,7 @@ async function fetchWeatherByCoords(latitude, longitude, name) {
 
     const data = await res.json();
 
-    // Day/Night + local time chip (returns isDay if you want it later)
+    // Day/Night + local time chip (returns isDay)
     updateDayNight(data);
 
     // Current weather

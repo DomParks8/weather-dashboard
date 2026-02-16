@@ -7,23 +7,25 @@ A simple web application that allows users to search for a city and view the cur
 - HTML
 - CSS
 - JavaScript
-- Open-Meteo APIs (Geocoding & Forecast)
 
-## How to Run the Project
+### APIs Used
 
-### Option 1 (Quickest)
+- Open-Meteo API – Current weather, forecast, and air quality
+- National Weather Service (NWS) API – Active weather alerts (U.S. only)
+- Zippopotam.us API – ZIP code to location lookup
 
-1. Download or clone the repository
-2. Open `index.html` in your browser
+### Project Structure
 
-### Option 2 (Recommended)
+This project contains the following required files:
 
-Run a local server to avoid browser restrictions:
+- Public GitHub Repository – Hosts all project files
+- index.html – Main HTML page for the application
+- styles.css – CSS file used to style the page
+- script.js – JavaScript file that retrieves and displays data from public APIs
+- README.md – Instructions for running the webpage
 
-- **VS Code**: Install “Live Server” → right-click `index.html`
-- **Python**:
+### How to Run the Project
 
-```bash
-python -m http.server
-
-```
+1. Clone or download the repository
+2. Open the project folder
+3. Open index.html in a web browser
